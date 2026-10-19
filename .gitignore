@@ -1,0 +1,6 @@
+slip_project/
+__pycache__/
+*.pyc
+.DS_Store
+checkpoints/
+results/
