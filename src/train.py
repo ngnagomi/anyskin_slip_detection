@@ -16,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from data import build_dataset, load_from_hub, load_local_dir
 from model import USDConvNetLite, count_parameters
 
+torch.set_num_threads(1)
+
 '''
 Fixes the random seeds so results can be reproduced.
 '''
