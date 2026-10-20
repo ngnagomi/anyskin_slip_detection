@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, str(Path(__file__).parent))
 from data import build_dataset, load_from_hub, load_local_dir
-from train import normalize, run_leave_one_object_out, train_one_model
+from train import normalize, run_leave_one_object_out, set_seed, train_one_model
 
 CONFIGS = [
     ("base", False, False),
@@ -74,6 +74,7 @@ def main():
     p.add_argument("--epochs", type=int, default=25)
     p.add_argument("--batch_size", type=int, default=64)
     p.add_argument("--lr", type=float, default=1e-3)
+    p.add_argument("--seed", type=int, default=0)
     args = p.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -86,6 +87,8 @@ def main():
     for name, use_fft, use_filter in CONFIGS:
         print()
         print("Config:", name, "| FFT:", use_fft, "| Filter:", use_filter)
+        # Same seed for every config, so they are compared fairly
+        set_seed(args.seed)
         bundle = build_dataset(df, window=args.window, stride=args.stride,
                                use_fft=use_fft, use_filter=use_filter)
         run_history(bundle, args, device, name)

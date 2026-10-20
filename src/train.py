@@ -16,6 +16,14 @@ from data import build_dataset, load_from_hub, load_local_dir
 from model import USDConvNetLite, count_parameters
 
 '''
+Fixes the random seeds so results can be reproduced.
+'''
+
+def set_seed(seed):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+'''
 Wraps NumPy arrays into a PyTorch dataloader, which training loop iterates over.
 '''
 
@@ -158,8 +166,10 @@ def main():
     p.add_argument("--batch_size", type=int, default=64)
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--checkpoint", type=str, default="checkpoints/model.pt")
+    p.add_argument("--seed", type=int, default=0)
     args = p.parse_args()
 
+    set_seed(args.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Device:", device)
 
