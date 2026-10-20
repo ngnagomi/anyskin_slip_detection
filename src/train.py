@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
+from sklearn.metrics import f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -22,6 +23,17 @@ Fixes the random seeds so results can be reproduced.
 def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
+
+'''
+Precision, recall and F1 for the slip class.
+'''
+
+def slip_metrics(y_true, y_pred):
+    return {
+        "precision": precision_score(y_true, y_pred, zero_division=0),
+        "recall": recall_score(y_true, y_pred, zero_division=0),
+        "f1": f1_score(y_true, y_pred, zero_division=0),
+    }
 
 '''
 Wraps NumPy arrays into a PyTorch dataloader, which training loop iterates over.
@@ -143,10 +155,18 @@ def run_leave_one_object_out(bundle, args, device, exclude_from_eval=("no_slip",
         X_train_n, X_test_n = normalize(X_train, X_test)
         r = train_one_model(X_train_n, y_train, X_test_n, y_test,
                              args.epochs, args.batch_size, args.lr, device)
-        print("Held out", held_out, "accuracy:", round(r["accuracy"], 4))
+        m = slip_metrics(r["y_true"], r["y_pred"])
+        print("Held out", held_out,
+              "| accuracy:", round(r["accuracy"], 4),
+              "| precision:", round(m["precision"], 4),
+              "| recall:", round(m["recall"], 4),
+              "| F1:", round(m["f1"], 4))
         results.append({
             "object": held_out,
             "accuracy": r["accuracy"],
+            "precision": m["precision"],
+            "recall": m["recall"],
+            "f1": m["f1"],
             "y_true": r["y_true"],
             "y_pred": r["y_pred"],
         })
