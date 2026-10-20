@@ -181,12 +181,25 @@ def main():
     run_leave_one_object_out(bundle, args, device)
 
     # Final model trained on everything
-    X_all, _ = normalize(bundle.X, bundle.X)
+    mu = float(bundle.X.mean())
+    sigma = float(bundle.X.std()) + 1e-6
+    X_all = (bundle.X - mu) / sigma
     final_model = train_one_model(
         X_all, bundle.y, X_all, bundle.y, args.epochs, args.batch_size, args.lr, device
     )["model"]
+
+    # Save the weights together with the normalization and window settings,
+    # so evaluate.py can process new data exactly the same way
+    checkpoint = {
+        "state_dict": final_model.state_dict(),
+        "mu": mu,
+        "sigma": sigma,
+        "window": args.window,
+        "use_fft": True,
+        "use_filter": True,
+    }
     Path(args.checkpoint).parent.mkdir(parents=True, exist_ok=True)
-    torch.save(final_model.state_dict(), args.checkpoint)
+    torch.save(checkpoint, args.checkpoint)
     print("Saved final model to", args.checkpoint)
 
 
